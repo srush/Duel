@@ -51,24 +51,23 @@ class DualMaster(object):
     if self.last_alpha:
       self.log("Last alpha %s"% self.last_alpha)
     self.log("\n")
-    self.log("New Weights %s"%self.penalty_weights)
+    for i in xrange(len(self.penalty_weights)):
+      self.log("Prob %s New Weights %s"%(self.subproblems[i].name , self.penalty_weights[i]))
 
   @classmethod
   def _compute_penalty_weights(_, cur_result, results):
     theta = {}
+    n = len(results)
     for d in cur_result.assignment:
-      for assignment in cur_result.assignment[d]:
-        theta.setdefault((d,assignment), 0.0)
-        theta[d,assignment] -= 1.0
+      theta.setdefault(d, 0.0)
+      theta[d] -= (1.0 )
 
 
     for res in results:
       if res is cur_result: continue
-      for d in res.subproblem.domains:
-        if res.assignment.has_key(d):
-          for assignment in res.assignment[d]:
-            theta.setdefault((d,assignment), 0.0)
-            theta[(d,assignment)] += 1.0
+      for d in res.assignment: 
+        theta.setdefault(d, 0.0)
+        theta[d] += 1.0 / (n -1.0)
     return theta 
 
 
@@ -85,8 +84,9 @@ class DualMaster(object):
       for domain in subres.subproblem.domains:
         for subres2 in results:
           if domain in subres2.subproblem.domains:
-            if subres2.assignment[domain] <> subres.assignment[domain]:
-              return False
+            for d in subres.assignment:
+              if d not in subres2.assignment:
+                return False
     return True
 
 
